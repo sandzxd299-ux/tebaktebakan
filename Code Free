@@ -1,0 +1,383 @@
+<!DOCTYPE html><html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tebak-Tebakan Hewan</title>
+  <style>
+    :root{
+      --bg: #0f172a;         /* slate-900 */
+      --card: #111827ee;     /* gray-900 */
+      --accent: #22d3ee;     /* cyan-400 */
+      --accent-2: #a78bfa;   /* violet-400 */
+      --text: #e5e7eb;       /* gray-200 */
+      --muted: #9ca3af;      /* gray-400 */
+      --good: #10b981;       /* emerald-500 */
+      --bad: #ef4444;        /* red-500 */
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      color:var(--text);
+      background:
+        radial-gradient(1200px 600px at 10% -10%, #1f2937 0%, transparent 60%),
+        radial-gradient(900px 500px at 100% 0%, #111827 0%, transparent 50%),
+        linear-gradient(180deg, #0b1020 0%, #0f172a 60%);
+      min-height:100svh;
+      display:grid;
+      place-items:center;
+      padding:24px;
+    }
+    .app{
+      width:min(920px, 100%);
+    }
+    header{
+      text-align:center;
+      margin-bottom:16px;
+    }
+    h1{
+      margin:0 0 8px;
+      font-size:clamp(24px, 3.2vw, 40px);
+      letter-spacing:.3px;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      -webkit-background-clip:text; background-clip:text; color:transparent;
+    }
+    .sub{color:var(--muted); font-size:clamp(12px, 2vw, 14px)}.card{
+  background:linear-gradient(180deg, #0b1222, #0b1222) padding-box,
+             linear-gradient(135deg, rgba(34,211,238,.6), rgba(167,139,250,.6)) border-box;
+  border:1px solid transparent;
+  border-radius:20px;
+  padding:18px;
+  box-shadow:var(--shadow);
+  display:grid;
+  gap:16px;
+}
+.row{display:grid; gap:12px}
+@media (min-width:800px){
+  .row{grid-template-columns: 1fr 300px; align-items:start}
+}
+
+.stats{
+  display:grid; grid-template-columns:repeat(3,1fr); gap:8px;
+}
+.stat{
+  background:#0b1222; border:1px solid #1f2937; border-radius:12px;
+  padding:10px; text-align:center; font-size:14px; color:var(--muted)
+}
+.stat b{display:block; color:var(--text); font-size:18px}
+
+.question{
+  background:#0b1222; border:1px solid #1f2937; border-radius:16px;
+  padding:16px; font-size:18px; line-height:1.6
+}
+
+.options{display:grid; gap:10px}
+.btn{
+  padding:12px 14px; border-radius:14px; border:1px solid #263145;
+  background:#0f1a2f; color:var(--text); cursor:pointer;
+  transition: transform .08s ease, background .2s ease, border-color .2s ease;
+  text-align:left; font-size:16px; width:100%;
+}
+.btn:hover{transform:translateY(-1px); background:#112041;}
+.btn:disabled{opacity:.7; cursor:not-allowed}
+
+.btn.good{background: rgba(16,185,129,.12); border-color: rgba(16,185,129,.4)}
+.btn.bad{background: rgba(239,68,68,.12); border-color: rgba(239,68,68,.4)}
+
+.controls{display:flex; gap:10px; flex-wrap:wrap}
+.primary{
+  padding:12px 16px; border-radius:12px; border:1px solid #2c3b59;
+  background:linear-gradient(90deg, var(--accent), var(--accent-2));
+  color:#0b1020; font-weight:700; cursor:pointer; flex:0 0 auto;
+  box-shadow: 0 8px 20px rgba(34,211,238,.25), 0 8px 20px rgba(167,139,250,.15);
+}
+.ghost{
+  padding:12px 16px; border-radius:12px; border:1px solid #2c3b59;
+  background:#0b1222; color:var(--text); cursor:pointer;
+}
+.progress{
+  height:10px; background:#0b1222; border-radius:999px; border:1px solid #1f2937; overflow:hidden
+}
+.bar{height:100%; width:0%; background:linear-gradient(90deg, var(--accent), var(--accent-2)); transition: width .3s ease}
+
+footer{margin-top:6px; text-align:center; color:var(--muted); font-size:12px}
+.hidden{display:none}
+
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>🎯 Tebak-Tebakan Hewan</h1>
+      <div class="sub">Pilih jawaban yang benar, tekan <b>Jawab</b>, lalu lanjut. Kumpulkan skor tertinggi!</div>
+    </header><div class="card">
+  <div class="stats">
+    <div class="stat">Soal<b id="sIndex">1/10</b></div>
+    <div class="stat">Skor<b id="sScore">0</b></div>
+    <div class="stat">Waktu<b id="sTime">00:00</b></div>
+  </div>
+
+  <div class="progress"><div class="bar" id="bar"></div></div>
+
+  <div class="row">
+    <main>
+      <div class="question" id="question">…</div>
+      <div class="options" id="options"></div>
+
+      <div class="controls">
+        <button class="primary" id="answerBtn">Jawab</button>
+        <button class="ghost" id="nextBtn">Lanjut ▶</button>
+        <button class="ghost" id="retryBtn" title="Mulai ulang">Ulangi 🔄</button>
+      </div>
+    </main>
+
+    <aside>
+      <div class="question">
+        <b>Tips Main</b><br/>
+        1) Klik salah satu opsi jawaban dulu.<br/>
+        2) Tekan <b>Jawab</b> untuk cek benar/salah.<br/>
+        3) Tekan <b>Lanjut</b> ke soal berikutnya.<br/>
+        4) Skor +10 untuk jawaban tepat pertama kali.
+      </div>
+      <div class="question" style="margin-top:12px">
+        <b>Mode</b>
+        <div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap">
+          <button class="ghost" id="modeEasy">Mudah</button>
+          <button class="ghost" id="modeMed">Sedang</button>
+          <button class="ghost" id="modeHard">Sulit</button>
+        </div>
+        <div style="color:var(--muted); font-size:12px; margin-top:8px">Mode memengaruhi jumlah opsi & campuran soal.</div>
+      </div>
+    </aside>
+  </div>
+
+  <footer>© 2025 — Dibuat untuk seru-seruan 🐾</footer>
+</div>
+
+  </div><script>
+// ======= BANK SOAL =======
+const BANK = [
+  {
+    clue: "Aku berkaki dua, pandai meniru suara, hobi memanjat. Aku siapa?",
+    answer: "burung beo",
+    choices: ["burung beo","orangutan","kanguru","kakatua"],
+  },
+  {
+    clue: "Tubuhku belang, larinya kencang, mirip kuda tapi bukan.",
+    answer: "zebra",
+    choices: ["kuda","zebra","keledai","rusa"],
+  },
+  {
+    clue: "Aku raja hutan, suaraku menggelegar.",
+    answer: "singa",
+    choices: ["macan","harimau","singa","serigala"],
+  },
+  {
+    clue: "Aku hidup di kutub, suka meluncur di es, warna tubuhku hitam putih.",
+    answer: "pinguin",
+    choices: ["paus","pinguin","anjing laut","orka"],
+  },
+  {
+    clue: "Memiliki belalai panjang, tubuh besar, suka berkelompok.",
+    answer: "gajah",
+    choices: ["gajah","badak","kuda nil","kerbau"],
+  },
+  {
+    clue: "Aku kecil, berbunyi nyaring di malam hari: kriik… kriik…",
+    answer: "jangkrik",
+    choices: ["belalang","jangkrik","kupu-kupu","lebah"],
+  },
+  {
+    clue: "Perenang handal, bernapas dengan insang, hidup di air tawar atau laut.",
+    answer: "ikan",
+    choices: ["ikan","udang","katak","ubur-ubur"],
+  },
+  {
+    clue: "Tubuhku berbulu domba, suaraku ‘mbek’.",
+    answer: "domba",
+    choices: ["kambing","domba","rusa","sapi"],
+  },
+  {
+    clue: "Aku melompat dengan kantong di perut.",
+    answer: "kanguru",
+    choices: ["koala","kanguru","walabi","kuskus"],
+  },
+  {
+    clue: "Panjang tubuhku beruas-ruas, berjalan banyak kaki.",
+    answer: "lipan",
+    choices: ["kaki seribu","lipan","ulat bulu","semut"],
+  },
+  {
+    clue: "Aku sering diajak manusia, disebut ‘sahabat terbaik’.",
+    answer: "anjing",
+    choices: ["kucing","anjing","hamster","kelinci"],
+  },
+  {
+    clue: "Kulitku bisa berganti warna untuk menyamar.",
+    answer: "bunglon",
+    choices: ["bunglon","kadal","tokek","biawak"],
+  },
+  {
+    clue: "Cangkangku keras, jalanku pelan.",
+    answer: "kura-kura",
+    choices: ["siput","kura-kura","kepiting","keong"],
+  },
+  {
+    clue: "Aku primata cerdas yang suka pisang, tetapi lebih suka hutan.",
+    answer: "orangutan",
+    choices: ["monyet","orangutan","gorila","simpanse"],
+  },
+  {
+    clue: "Aku terbang malam, menggunakan sonar untuk ‘melihat’.",
+    answer: "kelelawar",
+    choices: ["burung hantu","elang","kelelawar","tekukur"],
+  }
+];
+
+// ======= UTIL =======
+const $ = (id) => document.getElementById(id);
+function shuffle(arr){
+  for(let i = arr.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+// ======= STATE =======
+let mode = 'med';   // easy|med|hard
+let order = [];     // index urutan soal
+let index = 0;      // posisi saat ini
+let score = 0;
+let locked = false; // sudah dijawab atau belum
+let selected = null;// indeks opsi yang dipilih
+let timer = null;   // interval
+let seconds = 0;    // waktu main
+
+// ======= DOM REF =======
+const qEl = $('question');
+const opsEl = $('options');
+const sIndex = $('sIndex');
+const sScore = $('sScore');
+const sTime = $('sTime');
+const bar = $('bar');
+const answerBtn = $('answerBtn');
+const nextBtn = $('nextBtn');
+const retryBtn = $('retryBtn');
+
+// ======= RENDER =======
+function formatTime(s){
+  const m = Math.floor(s/60).toString().padStart(2,'0');
+  const ss = (s%60).toString().padStart(2,'0');
+  return `${m}:${ss}`;
+}
+function startTimer(){
+  clearInterval(timer);
+  timer = setInterval(()=>{
+    seconds++; sTime.textContent = formatTime(seconds);
+  }, 1000);
+}
+
+function buildOrder(){
+  const count = 10; // total soal per sesi
+  const ids = Array.from({length:BANK.length}, (_,i)=>i);
+  shuffle(ids);
+  order = ids.slice(0, count);
+}
+
+function choiceCountByMode(){
+  return mode==='easy' ? 3 : mode==='hard' ? 5 : 4;
+}
+
+function renderQuestion(){
+  locked = false; selected = null; answerBtn.disabled=false;
+  const qid = order[index];
+  const item = BANK[qid];
+  qEl.textContent = item.clue;
+
+  // buat opsi sesuai mode
+  const choices = new Set([item.answer]);
+  const pool = shuffle([...BANK.flatMap(q=>q.choices)]);
+  for(const c of pool){
+    if(choices.size >= choiceCountByMode()) break;
+    if(!choices.has(c)) choices.add(c);
+  }
+  const finalChoices = shuffle([...choices]).slice(0, choiceCountByMode());
+
+  opsEl.innerHTML = '';
+  finalChoices.forEach((opt, i)=>{
+    const btn = document.createElement('button');
+    btn.className = 'btn';
+    btn.textContent = opt.charAt(0).toUpperCase()+opt.slice(1);
+    btn.onclick = ()=>{
+      if(locked) return;
+      [...opsEl.children].forEach(b=>b.classList.remove('selected'));
+      btn.classList.add('selected');
+      selected = i;
+      // simpan jawaban terpilih ke data-
+      opsEl.dataset.answer = item.answer;
+      opsEl.dataset.correctIndex = finalChoices.indexOf(item.answer);
+      opsEl.dataset.selectedIndex = i;
+    };
+    opsEl.appendChild(btn);
+  });
+
+  sIndex.textContent = `${index+1}/${order.length}`;
+  bar.style.width = `${((index)/order.length)*100}%`;
+}
+
+function markAnswers(){
+  if(locked) return; locked = true;
+  answerBtn.disabled = true;
+  const correctIdx = Number(opsEl.dataset.correctIndex);
+  const selIdx = Number(opsEl.dataset.selectedIndex);
+
+  [...opsEl.children].forEach((btn, i)=>{
+    if(i === correctIdx) btn.classList.add('good');
+    if(i === selIdx && selIdx !== correctIdx) btn.classList.add('bad');
+    btn.disabled = true;
+  });
+
+  if(selIdx === correctIdx){
+    score += 10; sScore.textContent = score;
+  }
+}
+
+function nextQuestion(){
+  if(index < order.length - 1){
+    index++; renderQuestion();
+  } else {
+    finish();
+  }
+}
+
+function finish(){
+  clearInterval(timer);
+  bar.style.width = '100%';
+  qEl.innerHTML = `🎉 Selesai! Skor akhir kamu <b>${score}</b> dari ${order.length*10}.<br>`+
+                  `Waktu: <b>${formatTime(seconds)}</b>. Klik <b>Ulangi</b> untuk main lagi!`;
+  opsEl.innerHTML = '';
+  answerBtn.disabled = true; nextBtn.disabled = true;
+}
+
+function reset(){
+  score = 0; index = 0; seconds = 0;
+  sScore.textContent = '0'; sTime.textContent = '00:00';
+  buildOrder(); renderQuestion(); startTimer();
+  answerBtn.disabled = false; nextBtn.disabled = false;
+}
+
+// ======= EVENTS =======
+answerBtn.addEventListener('click', markAnswers);
+nextBtn.addEventListener('click', nextQuestion);
+retryBtn.addEventListener('click', reset);
+
+$('modeEasy').addEventListener('click', ()=>{mode='easy'; reset();});
+$('modeMed').addEventListener('click', ()=>{mode='med'; reset();});
+$('modeHard').addEventListener('click', ()=>{mode='hard'; reset();});
+
+// ======= INIT =======
+buildOrder(); renderQuestion(); startTimer();
+</script></body>
+</html>
