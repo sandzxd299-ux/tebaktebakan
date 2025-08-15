@@ -1,2 +1,2 @@
-# tebaktebakan
-Seru seruan aja
+# cuansandz
+jualan
